@@ -1,0 +1,32 @@
+<launch>
+  <arg name="is_sim" default="false"/>
+  <arg name="model" default="$(find ur_description)/urdf/ur3_robot.urdf.xacro"/>
+  <arg name="rvizconfig" default="$(find ur_description)/cfg/view_robot.rviz" />
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />
+
+    <!-- launch aws-iot-bridge -->
+  <include file="$(find aws_iot_mqtt_bridge)/launch/aws_iot_bridge.launch">
+    <arg name="bridge_params" value="$(find mqtt_monitor)/config/mqtt_topic_ur.yaml" />
+    <!-- arg name="bridge_params" value="$(find aws_iot_mqtt_bridge)/config/mqtt_topic_ur.yaml" /-->
+  </include>
+
+  <rosparam param="is_sim" subst_value="True">$(arg is_sim)</rosparam>
+  <!-- run mqtt_ur_monitor node -->
+  <node name="ur_monitor" pkg="mqtt_monitor" type="mqtt_ur_monitor" respawn="false" output="screen">
+      <!-- <remap from="/pub_I0" to="/pub_I1" /> -->
+  </node>
+
+  <!--
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" >
+    <param name="use_gui" value="true"/>
+  </node>
+  -->
+  <!-- Start Robot State Publisher -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+    <remap from="/joint_states" to="/ur/joint_states" />
+  </node>
+
+  <!-- Start RViz -->
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+</launch>
