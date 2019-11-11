@@ -1,13 +1,18 @@
 bridge:
-  # Publish  From ROS to AWS
-  - factory: mqtt_bridge.bridge:RosToMqttBridge
-    msg_type: std_msgs.msg:String
-    topic_from: /mqtt_ur_data
-    topic_to: NexCOBOT/URrobot/Data
+  ## Publish  From ROS to AWS
+  #- factory: mqtt_bridge.bridge:RosToMqttBridge
+  #  msg_type: std_msgs.msg:String
+  #  topic_from: /mqtt_ur_data
+  #  topic_to: NexCOBOT/URrobot/Data
 
   # Subscribe -- From AWS Mqtt topic (NexCOBOT/CloudUR/) to ROS topic (mqin)
+  #- factory: mqtt_bridge.bridge:MqttToRosBridge
+  #  msg_type: std_msgs.msg:String
+  #  topic_from: NexCOBOT/CloudUR/Data
+  #  topic_to: /mqin_ur_data
+
   - factory: mqtt_bridge.bridge:MqttToRosBridge
     msg_type: std_msgs.msg:String
-    topic_from: NexCOBOT/CloudUR/Data
+    topic_from: NexCOBOT/URrobot/Data
     topic_to: /mqin_ur_data
 

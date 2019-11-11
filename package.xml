@@ -60,8 +60,9 @@
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
 
-  <!-- Add SRB packge depend -->
+  <!-- Add SRB packge depend 
   <depend>robot_gateway</depend>
+  -->
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

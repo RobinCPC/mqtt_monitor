@@ -5,7 +5,7 @@
 #include <ros/ros.h>
 #include <std_msgs/String.h>
 #include <sensor_msgs/JointState.h>
-#include <robot_gateway/ur_msg.h>
+//#include <robot_gateway/ur_msg.h>
 
 #include <vector>
 #include <string>
@@ -21,9 +21,9 @@ public:
 private:
   ros::NodeHandle nh_;
 
-  ros::Subscriber ur_mod_sub;
+  //ros::Subscriber ur_mod_sub;
   ros::Publisher ur_jnt_pub;
-  ros::Publisher ur_mqtt_pub;
+  //ros::Publisher ur_mqtt_pub;
   ros::Subscriber ur_mqin_sub;
 
   //ros::Publisher time_pub;
@@ -40,7 +40,7 @@ private:
   const double d2r = 0.017453292519943;
   bool in_cloud = false;
 
-  void ur_msg_callback(const robot_gateway::ur_msg& ur_mod_msg);
+  //void ur_msg_callback(const robot_gateway::ur_msg& ur_mod_msg);
   void ur_mqin_callback(const std_msgs::String& ur_mqin_msg);
   void pub_joint_state(const std::vector<double>& jntVals);
   std::vector<std::string> split(std::string cmd, std::string delimiter);
