@@ -4,21 +4,6 @@ project(mqtt_monitor)
 ## Compile as C++11, supported in ROS Kinetic and newer
 add_compile_options(-std=c++11)
 
-##list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
-#list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
-##find extra library (Eigen3) or add diretory
-#find_package(Modbus)     #REQUIRED
-##add_library(Eigen3 NO_MODULE)
-#if(MODBUS_FOUND)
-#    message("find Modbus!\n")
-#else(MODBUS_FOUND)
-#    message("No Modbus. Include directory mannually.\n")
-#    include_directories(
-#        /usr/include/modbus/
-#        /usr/local/include/modbus/
-#        )
-#endif(MODBUS_FOUND)
-
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
@@ -26,7 +11,6 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
   std_msgs
-#  robot_gateway
 )
 
 ## System dependencies are found with CMake's conventions
@@ -134,7 +118,6 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
-  #  /home/nexrb/srb_ws/install/include/
 )
 
 ## Declare a C++ library
@@ -152,6 +135,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 # add_executable(${PROJECT_NAME}_node src/mqtt_monitor_node.cpp)
 add_executable(mqtt_ur_monitor src/mqtt_ur_monitor.cpp include/mqtt_monitor/mqtt_ur_monitor.h)
+add_executable(mqtt_yk_monitor src/mqtt_yk_monitor.cpp include/mqtt_monitor/mqtt_yk_monitor.h)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -169,7 +153,9 @@ add_executable(mqtt_ur_monitor src/mqtt_ur_monitor.cpp include/mqtt_monitor/mqtt
 # )
 target_link_libraries(mqtt_ur_monitor
   ${catkin_LIBRARIES}
-  #  /home/nexrb/srb_ws/install/lib
+)
+target_link_libraries(mqtt_yk_monitor
+  ${catkin_LIBRARIES}
 )
 
 #############
@@ -191,7 +177,7 @@ target_link_libraries(mqtt_ur_monitor
 # install(TARGETS ${PROJECT_NAME}_node
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
-install(TARGETS mqtt_ur_monitor
+install(TARGETS mqtt_ur_monitor mqtt_yk_monitor
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
