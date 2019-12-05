@@ -1,6 +1,6 @@
 <launch>
   <arg name="is_sim" default="true"/>
-  <arg name="model" default="$(find motoman_mys450f_support)/urdf/mys450f.xacro"/>
+  <arg name="model" default="$(find motoman_motomini_support)/urdf/motomini.xacro"/>
   <arg name="rvizconfig" default="$(find motoman_mys450f_support)/rviz/display.rviz" />
 
   <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />

@@ -32,8 +32,10 @@ void MqttYkMonitor::yk_mqin_callback(const std_msgs::String& yk_mqin_msg)
   //}
   jointVals.push_back( std::stod(jnt_str[1]) * d2r);
   jointVals.push_back( std::stod(jnt_str[2]) * d2r);
-  jointVals.push_back( std::stod(jnt_str[3]) * mm2meter); // third joint is prismatic type
+  jointVals.push_back( std::stod(jnt_str[3]) * d2r);
   jointVals.push_back( std::stod(jnt_str[4]) * d2r);
+  jointVals.push_back( std::stod(jnt_str[5]) * d2r);
+  jointVals.push_back( std::stod(jnt_str[6]) * d2r);
   pub_joint_state(jointVals);
 
   std::string tmp_str ="";
