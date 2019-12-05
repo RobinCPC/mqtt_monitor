@@ -27,8 +27,10 @@ void MqttYkMonitor::ur_msg_callback(const robot_gateway::ur_msg& ur_mod_msg)
   //publish Yaskawa joint state for local RViz
   std::vector<double> jointVals = {ur_mod_msg.Addr_270 * d2r,
                                    ur_mod_msg.Addr_271 * d2r,
-                                   ur_mod_msg.Addr_272 * mm2meter,
-                                   ur_mod_msg.Addr_273 * d2r
+                                   ur_mod_msg.Addr_272 * d2r,
+                                   ur_mod_msg.Addr_273 * d2r,
+                                   ur_mod_msg.Addr_274 * d2r,
+                                   ur_mod_msg.Addr_275 * d2r
                                   };
   pub_joint_state(jointVals);
 

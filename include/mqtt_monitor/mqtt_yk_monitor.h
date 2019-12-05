@@ -39,7 +39,9 @@ private:
   std::vector<std::string> jointNames = {"joint_1_s",
                                          "joint_2_l",
                                          "joint_3_u",
-                                         "joint_3_u-tool0"};
+                                         "joint_4_r",
+                                         "joint_5_b",
+                                         "joint_6_t"};
 
   const double r2d = 57.295779513;
   const double d2r = 0.017453292519943;
