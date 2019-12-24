@@ -1,27 +1,41 @@
 <launch>
   <arg name="is_sim" default="false"/>
+  <arg name="in_cloud" default="false"/>
+  <arg name="sampling_time" default="0.1"/>
   <arg name="model" default="$(find motoman_motomini_support)/urdf/motomini.xacro"/>
   <arg name="rvizconfig" default="$(find ur_description)/cfg/view_robot.rviz" />
 
   <param name="robot_description" command="$(find xacro)/xacro --inorder $(arg model)" />
 
-    <!-- launch aws-iot-bridge -->
+  <!-- launch gazebo with moveit and move_group control node-->
+  <group if="$(arg is_sim)">
+    <include file="$(find motoman_motomini_control)/launch/simulate_with_moveit.launch">
+    </include>
+    <node name="motomini_movegroup_control" pkg="motoman_motomini_control" type="motomini_movegroup_control"
+      respawn="false" output="screen"/>
+  </group>
+
+  <!-- launch aws-iot-bridge -->
   <include file="$(find aws_iot_mqtt_bridge)/launch/aws_iot_bridge.launch">
     <arg name="bridge_params" value="$(find mqtt_monitor)/config/mqtt_topic_yk.yaml" />
     <!-- arg name="bridge_params" value="$(find aws_iot_mqtt_bridge)/config/mqtt_topic_ur.yaml" /-->
   </include>
 
+  <!-- run mqtt_ur_monitor node with certain parameters -->
   <rosparam param="is_sim" subst_value="True">$(arg is_sim)</rosparam>
-  <!-- run mqtt_ur_monitor node -->
+  <rosparam param="in_cloud" subst_value="True">$(arg in_cloud)</rosparam>
+  <rosparam param="sampling_time" subst_value="True">$(arg sampling_time)</rosparam>
   <node name="yk_monitor" pkg="mqtt_monitor" type="mqtt_yk_monitor" respawn="false" output="screen">
       <!-- <remap from="/pub_I0" to="/pub_I1" /> -->
   </node>
 
-  <!-- Start Robot State Publisher -->
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
-    <remap from="/joint_states" to="/yk/joint_states" />
-  </node>
+  <group unless="$(arg is_sim)">
+    <!-- Start Robot State Publisher -->
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" respawn="false" output="screen">
+      <remap from="/joint_states" to="/yk/joint_states" />
+    </node>
 
-  <!-- Start RViz -->
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+    <!-- Start RViz -->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(arg rvizconfig)" required="true" />
+  </group>
 </launch>

@@ -7,14 +7,35 @@ MqttYkMonitor::MqttYkMonitor(ros::NodeHandle nh)
   start_time = ros::Time::now();
   update_time = start_time;
 
-  nh_.param<bool>("is_sim", in_cloud, false);
-  ROS_INFO_STREAM("Is This Node in AWS Cloud? " << in_cloud);
+  nh_.param<bool>("in_cloud", in_cloud, false);
+  ROS_INFO_STREAM("Is mqtt_monitor node in AWS Cloud? " << in_cloud);
+  nh_.param<bool>("is_sim", is_sim, false);
+  ROS_INFO_STREAM("Is mqtt_monitor node do simulation with Gazebo? " << is_sim);
+  nh_.param<double>("sampling_time", sampling_time, 0.1);
+  ROS_INFO_STREAM("Sampling time (sec) for sending out message: " << sampling_time);
 
   // Subscribe UR modbus data from SRB robot_gateway
-  ur_mod_sub = nh_.subscribe("/pub_I0", 1, &MqttYkMonitor::ur_msg_callback, this);
-  yk_jnt_pub = nh_.advertise<sensor_msgs::JointState>("/yk/joint_states", 1);
-  yk_mqtt_pub = nh_.advertise<std_msgs::String>("/mqtt_yk_data", 1);
-  //yk_mqin_sub = nh_.subscribe("/mqin_yk_data", 1, &MqttYkMonitor::ur_mqin_callback, this);
+  if(in_cloud)
+  {
+    yk_mqin_sub = nh_.subscribe("/mqin_yk_data", 1, &MqttYkMonitor::ur_mqin_callback, this);
+  }else
+  {
+    ur_mod_sub = nh_.subscribe("/pub_I0", 1, &MqttYkMonitor::ur_msg_callback, this);
+    yk_mqtt_pub = nh_.advertise<std_msgs::String>("/mqtt_yk_data", 1);
+  }
+
+  if(is_sim)
+  {
+    target_jnt_pub = nh_.advertise<std_msgs::Float64MultiArray>("/yk/target_jnt_data", 1);
+
+    this->target_jnt_msg.layout.dim.push_back(std_msgs::MultiArrayDimension());
+    this->target_jnt_msg.layout.dim[0].size = 6;  // TODO: use rosparam to get correct value.
+    this->target_jnt_msg.layout.dim[0].stride = 1;
+    this->target_jnt_msg.layout.dim[0].label = "Joint";
+  }else
+  {
+    yk_jnt_pub = nh_.advertise<sensor_msgs::JointState>("/yk/joint_states", 1);
+  }
 
   //// Publish total connecting time
   //time_pub = nh_.advertise<std_msgs::String>("/mqtt_time", 1);
@@ -32,11 +53,12 @@ void MqttYkMonitor::ur_msg_callback(const robot_gateway::ur_msg& ur_mod_msg)
                                    ur_mod_msg.Addr_274 * d2r,
                                    ur_mod_msg.Addr_275 * d2r
                                   };
-  pub_joint_state(jointVals);
+  if(!is_sim)
+    pub_joint_state(jointVals);
 
   // publish UR robot data to cloud
   ros::Duration time_diff = (ros::Time::now() - update_time);
-  if (time_diff.toSec() >= 1.0)
+  if (time_diff.toSec() >= sampling_time)
   {
     // Compute Power on time  (TODO: need to get real one from UR_modbus)
     update_time = ros::Time::now();
@@ -67,6 +89,15 @@ void MqttYkMonitor::ur_msg_callback(const robot_gateway::ur_msg& ur_mod_msg)
     ur_data_msg.data = ur_data_str;
     yk_mqtt_pub.publish(ur_data_msg);
 
+    // publish target joint val per sec
+    if(is_sim)
+    {
+      this->target_jnt_msg.data.clear();
+      this->target_jnt_msg.data.insert(this->target_jnt_msg.data.end(),
+          jointVals.begin(), jointVals.end());
+      this->target_jnt_pub.publish(this->target_jnt_msg);
+    }
+
   }
 
   return;
@@ -83,7 +114,8 @@ void MqttYkMonitor::ur_mqin_callback(const std_msgs::String& ur_mqin_msg)
   {
     jointVals.push_back( std::stod(jnt_str[i]) * d2r);
   }
-  pub_joint_state(jointVals);
+  if(!is_sim)
+    pub_joint_state(jointVals);
 
   std::string tmp_str ="";
   for (auto& s : jnt_str)

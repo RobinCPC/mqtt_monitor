@@ -4,6 +4,8 @@
 
 #include <ros/ros.h>
 #include <std_msgs/String.h>
+#include <std_msgs/Float64MultiArray.h>
+#include <std_msgs/MultiArrayDimension.h>
 #include <sensor_msgs/JointState.h>
 #include <robot_gateway/ur_msg.h>
 
@@ -30,6 +32,8 @@ private:
   ros::Publisher yk_jnt_pub;
   ros::Publisher yk_mqtt_pub;
   ros::Subscriber yk_mqin_sub;
+  ros::Publisher target_jnt_pub;
+  std_msgs::Float64MultiArray target_jnt_msg;
 
   //ros::Publisher time_pub;
   ros::Time start_time;
@@ -47,7 +51,9 @@ private:
   const double d2r = 0.017453292519943;
   const double mm2meter = 0.001;  // convert millimeter to meter unit
   jointUnitMap unitConvet  {{"revolute", DEG2RAD}, {"prismatic", MM2METER}};
-  bool in_cloud = false;
+  bool in_cloud = false;  // check if run in the cloud service (such as AWS)
+  bool is_sim = false;    // check if use gazebo for simulation
+  double sampling_time = 0.1; // time period for message publish to mqtt or control interface
 
   void ur_msg_callback(const robot_gateway::ur_msg& ur_mod_msg);
   void ur_mqin_callback(const std_msgs::String& ur_mqin_msg);
