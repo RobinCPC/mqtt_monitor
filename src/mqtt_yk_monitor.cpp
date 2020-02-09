@@ -1,5 +1,13 @@
 #include <mqtt_monitor/mqtt_yk_monitor.h>
-#include "../include/mqtt_monitor/mqtt_yk_monitor.h"
+//#include "../include/mqtt_monitor/mqtt_yk_monitor.h"
+#include <cv_bridge/cv_bridge.h>
+//#include <opencv2/core/core.hpp>
+//#include <opencv2/videoio/videoio.hpp>
+//#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
+//#include <opencv-3.3.1-dev/opencv2/core/cvdef.h>
+//#include <opencv-3.3.1-dev/opencv2/core.hpp>
+//#include <opencv-3.3.1-dev/opencv2/videoio.hpp>
 
 MqttYkMonitor::MqttYkMonitor(ros::NodeHandle nh)
   : nh_(nh)
@@ -39,6 +47,9 @@ MqttYkMonitor::MqttYkMonitor(ros::NodeHandle nh)
 
   //// Publish total connecting time
   //time_pub = nh_.advertise<std_msgs::String>("/mqtt_time", 1);
+
+  // For Face Interact
+  face_cmd_sub = nh_.subscribe("/face_cmd", 1, &MqttYkMonitor::face_cmd_callback, this);
 }
 
 MqttYkMonitor::~MqttYkMonitor(){}
@@ -156,6 +167,89 @@ std::vector<std::string> MqttYkMonitor::split(std::string cmd, std::string delim
   token = cmd.substr(start, end - start);
   list.emplace_back(token);
   return list;
+}
+
+void MqttYkMonitor::face_cmd_callback(const mqtt_monitor::FaceInteractCommand& face_cmd_msg)
+{
+  if(face_cmd_msg.cmdId == 0)
+  {
+    ROS_INFO_STREAM("FaceInteractCommand cmdId: " << face_cmd_msg.cmdId);
+    // Took picture and add to list
+    cv::Mat src;
+    cv::VideoCapture cap("/dev/video2");
+
+    if(!cap.isOpened())
+    {
+      //std::cerr << "Error! Unable to open camera!\n" << std::endl;
+      ROS_INFO_STREAM("Error! Unable to open camera!\n");
+      return;
+    }
+    cap >> src;
+    if(src.empty())
+    {
+      ROS_INFO_STREAM("Error! Blank frame grabbed!\n");
+      return;
+    }
+
+    const std::string WIN_TITLE = "Take Picture";
+    ros::Rate loop_rate(5);
+
+    cv::namedWindow(WIN_TITLE);
+    while(nh_.ok())
+    {
+      cap >> src;
+      if(!src.empty())
+      {
+        cv::Mat frame;
+        cv::Mat crop_image;
+        cv::flip(src, frame, 1);
+
+        // Add a rectangle box
+        cv::Rect boxROI(220, 90, 200, 300);
+        //cv::rectangle(frame, cv::Point(240, 180), cv::Point(400, 300), cv::Scalar(0,0, 255), 2);
+        cv::rectangle(frame, boxROI, cv::Scalar(0, 255, 0), 2);
+
+        cv::imshow(WIN_TITLE, frame);
+        char key = (char)cv::waitKey(5);
+        if(key == 's' || key == 'S')
+        {// save img for testing
+          if( face_cmd_msg.str_param != "")
+          {
+            // crop image in Rectangle box
+            crop_image = frame(boxROI);
+            cv::imwrite("/home/nexrb/Downloads/face_data/" + 
+                face_cmd_msg.str_param + ".jpg", crop_image);
+            break;
+          }
+        }
+        else if(key == 'c' || key == 'C')
+        {
+          // crop image in Rectangle box
+          //crop_image = frame(boxROI);
+          cv::flip(src, frame, 1);
+          const std::string temp_filename = "/home/nexrb/Downloads/temp_test1.jpg";
+          cv::imwrite(temp_filename, frame);
+          break;
+        }
+        else if(key == 27 || key == 'q' || key == 'Q')
+        {
+          break;
+        }
+      }
+      else
+      {
+        ROS_INFO_STREAM("Empty Frame!!");
+      }
+
+      ros::spinOnce();
+    }
+    cv::destroyWindow(WIN_TITLE);
+
+  }else if (face_cmd_msg.cmdId == 1)
+  {
+    // Do face re-identication and return the id of face owner and bbox
+    ROS_INFO_STREAM("FaceInteractCommand cmdId: " << face_cmd_msg.cmdId);
+  }
 }
 
 int main( int argc, char **argv )

@@ -8,6 +8,7 @@
 #include <std_msgs/MultiArrayDimension.h>
 #include <sensor_msgs/JointState.h>
 #include <robot_gateway/ur_msg.h>
+#include <mqtt_monitor/FaceInteractCommand.h>
 
 #include <vector>
 #include <string>
@@ -34,6 +35,8 @@ private:
   ros::Subscriber yk_mqin_sub;
   ros::Publisher target_jnt_pub;
   std_msgs::Float64MultiArray target_jnt_msg;
+  ros::Subscriber face_cmd_sub;
+  void face_cmd_callback(const mqtt_monitor::FaceInteractCommand& face_cmd_msg);
 
   //ros::Publisher time_pub;
   ros::Time start_time;
