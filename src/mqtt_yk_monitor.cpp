@@ -1,13 +1,15 @@
 #include <mqtt_monitor/mqtt_yk_monitor.h>
 //#include "../include/mqtt_monitor/mqtt_yk_monitor.h"
 #include <cv_bridge/cv_bridge.h>
+#include <opencv2/opencv.hpp>
 //#include <opencv2/core/core.hpp>
 //#include <opencv2/videoio/videoio.hpp>
 //#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/opencv.hpp>
+//#include <opencv2/imgproc/imgproc.hpp>
 //#include <opencv-3.3.1-dev/opencv2/core/cvdef.h>
 //#include <opencv-3.3.1-dev/opencv2/core.hpp>
 //#include <opencv-3.3.1-dev/opencv2/videoio.hpp>
+//#include <opencv-3.3.1-dev/opencv2/imgproc.hpp>
 
 MqttYkMonitor::MqttYkMonitor(ros::NodeHandle nh)
   : nh_(nh)
@@ -176,7 +178,7 @@ void MqttYkMonitor::face_cmd_callback(const mqtt_monitor::FaceInteractCommand& f
     ROS_INFO_STREAM("FaceInteractCommand cmdId: " << face_cmd_msg.cmdId);
     // Took picture and add to list
     cv::Mat src;
-    cv::VideoCapture cap("/dev/video2");
+    cv::VideoCapture cap("/dev/video0");
 
     if(!cap.isOpened())
     {
@@ -217,8 +219,13 @@ void MqttYkMonitor::face_cmd_callback(const mqtt_monitor::FaceInteractCommand& f
           {
             // crop image in Rectangle box
             crop_image = frame(boxROI);
-            cv::imwrite("/home/nexrb/Downloads/face_data/" + 
-                face_cmd_msg.str_param + ".jpg", crop_image);
+            cv::imwrite("/home/ros-industrial/Downloads/face_data/" +
+                face_cmd_msg.str_param + ".0.jpg", crop_image);
+            // update face_gallery list
+            const std::string create_list_cmd = "python3 /home/ros-industrial/Downloads/create_list.py \
+                                                 /home/ros-industrial/Downloads/face_data/";
+            int systemRet = std::system(create_list_cmd.c_str());
+            ROS_INFO_STREAM("Create list cmd  return: " << systemRet);
             break;
           }
         }
@@ -227,7 +234,7 @@ void MqttYkMonitor::face_cmd_callback(const mqtt_monitor::FaceInteractCommand& f
           // crop image in Rectangle box
           //crop_image = frame(boxROI);
           cv::flip(src, frame, 1);
-          const std::string temp_filename = "/home/nexrb/Downloads/temp_test1.jpg";
+          const std::string temp_filename = "/home/ros-industrial/Downloads/temp_test1.jpg";
           cv::imwrite(temp_filename, frame);
           break;
         }
@@ -249,6 +256,9 @@ void MqttYkMonitor::face_cmd_callback(const mqtt_monitor::FaceInteractCommand& f
   {
     // Do face re-identication and return the id of face owner and bbox
     ROS_INFO_STREAM("FaceInteractCommand cmdId: " << face_cmd_msg.cmdId);
+    const std::string run_cmd = "bash /home/ros-industrial/Downloads/face_demo.sh";
+    int systemRet = std::system(run_cmd.c_str());
+    ROS_INFO_STREAM("run cmd  return: " << systemRet);
   }
 }
 
